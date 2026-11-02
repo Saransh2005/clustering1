@@ -1,0 +1,135 @@
+{
+  "rows": 45000,
+  "columns": 14,
+  "blank_cells": 0,
+  "bad_age": 7,
+  "train_rows": 36000,
+  "test_rows": 9000,
+  "features": 22,
+  "cs_mean": 632.6495833333333,
+  "cs_std": 50.29234584291474,
+  "top_features": {
+    "previous_loan_defaults_on_file_Yes": 0.47101710322561635,
+    "loan_percent_income": 0.2030390618899109,
+    "loan_int_rate": 0.18702102389834818,
+    "person_income": 0.08229782986391564,
+    "person_home_ownership_RENT": 0.04833594755770792,
+    "person_home_ownership_OWN": 0.007332271119809945,
+    "loan_intent_MEDICAL": 0.000956762444691045,
+    "person_home_ownership_OTHER": 0.0
+  },
+  "accuracy": 0.9116666666666666,
+  "tn": 6759,
+  "fp": 241,
+  "fn": 554,
+  "tp": 1446,
+  "precision": 0.8571428571428571,
+  "recall": 0.723,
+  "f1": 0.7843775427176566,
+  "income_table": [
+    {
+      "income_group": "Low",
+      "applicants": 11250,
+      "approved": 4542,
+      "approval_rate": 40.373333333333335,
+      "income_range": "8,000 - 47,204"
+    },
+    {
+      "income_group": "Lower-Middle",
+      "applicants": 11251,
+      "approved": 2481,
+      "approval_rate": 22.05137321127011,
+      "income_range": "47,204 - 67,048"
+    },
+    {
+      "income_group": "Upper-Middle",
+      "applicants": 11249,
+      "approved": 1936,
+      "approval_rate": 17.210418703884788,
+      "income_range": "67,048 - 95,789"
+    },
+    {
+      "income_group": "High",
+      "applicants": 11250,
+      "approved": 1041,
+      "approval_rate": 9.253333333333332,
+      "income_range": "95,789 - 7,200,766"
+    }
+  ],
+  "overall_rate": 22.22222222222222,
+  "check": {
+    "credit_score": [
+      22.5,
+      22.6,
+      22.2,
+      21.6
+    ],
+    "loan_percent_income": [
+      11.2,
+      13.2,
+      18.9,
+      48.3
+    ],
+    "default_yes": 0.0,
+    "default_no": 45.163038569234935,
+    "lpi_by_income": [
+      0.18074044444444443,
+      0.1492702870855924,
+      0.1306151657925149,
+      0.098272
+    ]
+  },
+  "scaling_same": true,
+  "depth_check": [
+    {
+      "depth": 1,
+      "train": 77.78,
+      "test": 77.78
+    },
+    {
+      "depth": 2,
+      "train": 85.02,
+      "test": 85.7
+    },
+    {
+      "depth": 3,
+      "train": 89.52,
+      "test": 89.63
+    },
+    {
+      "depth": 4,
+      "train": 91.16,
+      "test": 90.98
+    },
+    {
+      "depth": 5,
+      "train": 91.4,
+      "test": 91.17
+    },
+    {
+      "depth": 6,
+      "train": 91.44,
+      "test": 91.21
+    },
+    {
+      "depth": 8,
+      "train": 92.21,
+      "test": 91.67
+    },
+    {
+      "depth": 10,
+      "train": 93.17,
+      "test": 92.04
+    },
+    {
+      "depth": 15,
+      "train": 95.75,
+      "test": 91.46
+    },
+    {
+      "depth": 20,
+      "train": 98.43,
+      "test": 90.28
+    }
+  ]
+}
