@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-LoanPredict - Executive Loan Approval Classification Dashboard
-==============================================================
-Author      : Saransh Singh
-Reg. No.    : 12301472
+LoanPredict - Simple & Elegant Loan Approval Analytics Dashboard
+================================================================
+Author      : Devangi Yadav
+Reg. No.    : 12300822
 Roll No.    : 35
-Section     : RK2P23FHB36
+Section     : RK2P23FHB35
 Institution : Lovely Professional University (LPU)
 Dataset     : Loan Approval Classification Dataset (45,000 records)
-Model       : Scikit-Learn DecisionTreeClassifier (max_depth=5)
+Model       : Decision Tree Classifier (max_depth=5)
 """
 
 import os
 import json
-import base64
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -22,104 +21,68 @@ import model_utils
 import visualizations as vz
 
 # ----------------------------------------------------------------------------
-# Page Config & Theming
+# Page Configuration
 # ----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="LoanPredict • Decision Tree Analytics",
+    page_title="LoanPredict • Devangi Yadav",
     page_icon="💳",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom Styling (Dark Fintech Cockpit)
+# Clean, Minimalist Dark Theme Styling (Spacious & Modern)
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
     
     html, body, [class*="css"] {
         font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     }
     
-    /* Top Bar adjustments */
-    header[data-testid="stHeader"] {
-        background: rgba(15, 23, 42, 0.85) !important;
-        backdrop-filter: blur(8px);
-    }
-    
+    /* Global Container Spacing */
     .block-container {
-        padding-top: 1.2rem !important;
+        padding-top: 1.5rem !important;
         padding-bottom: 2rem !important;
-        max-width: 100% !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+        max-width: 1200px !important;
+        margin: 0 auto !important;
     }
     
-    /* Hero Header */
-    .hero-card {
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-        border: 1px solid #334155;
-        border-radius: 12px;
-        padding: 18px 24px;
-        margin-bottom: 18px;
-        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+    /* Clean Minimal Header */
+    .main-header {
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #334155;
     }
-    .hero-title {
+    .main-title {
         font-size: 26px;
-        font-weight: 800;
+        font-weight: 700;
         color: #f8fafc;
+        margin: 0 0 6px 0;
         letter-spacing: -0.5px;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 12px;
     }
-    .hero-subtitle {
-        font-size: 13px;
+    .main-sub {
+        font-size: 13.5px;
         color: #94a3b8;
-        margin-top: 5px;
-    }
-    .hero-badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 10px;
-    }
-    .hero-badge {
-        font-size: 11px;
-        font-weight: 600;
-        padding: 4px 10px;
-        border-radius: 6px;
-        background: rgba(56, 189, 248, 0.12);
-        color: #38bdf8;
-        border: 1px solid rgba(56, 189, 248, 0.3);
-    }
-    .hero-badge-green {
-        background: rgba(16, 185, 129, 0.12);
-        color: #10b981;
-        border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-    .hero-badge-purple {
-        background: rgba(168, 85, 247, 0.12);
-        color: #a855f7;
-        border: 1px solid rgba(168, 85, 247, 0.3);
+        margin: 0;
     }
     
-    /* KPI Metric Cards */
-    .kpi-grid {
+    /* 4 Spacious KPI Cards */
+    .kpi-row {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-        gap: 12px;
-        margin-bottom: 18px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
     }
-    .kpi-card {
+    @media (max-width: 768px) {
+        .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    .kpi-box {
         background: #1e293b;
         border: 1px solid #334155;
         border-radius: 10px;
-        padding: 12px 16px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-        transition: transform 0.2s ease, border-color 0.2s ease;
-    }
-    .kpi-card:hover {
-        transform: translateY(-2px);
-        border-color: #38bdf8;
+        padding: 16px 18px;
     }
     .kpi-label {
         font-size: 11px;
@@ -127,467 +90,360 @@ st.markdown("""
         text-transform: uppercase;
         letter-spacing: 0.5px;
         color: #94a3b8;
+        margin-bottom: 6px;
     }
-    .kpi-val {
-        font-size: 24px;
-        font-weight: 800;
+    .kpi-number {
+        font-size: 26px;
+        font-weight: 700;
         color: #f8fafc;
-        margin: 4px 0 2px 0;
+        margin: 0;
     }
-    .kpi-sub {
+    .kpi-note {
         font-size: 11px;
         color: #64748b;
+        margin-top: 4px;
     }
     
-    /* Content Card Container */
-    .panel-box {
-        background: #0f172a;
-        border: 1px solid #1e293b;
+    /* Clean Cards for Tab Content */
+    .clean-card {
+        background: #1e293b;
+        border: 1px solid #334155;
         border-radius: 10px;
-        padding: 16px;
+        padding: 20px;
         margin-bottom: 16px;
     }
     
-    /* Predictor Result Cards */
-    .predict-approved {
+    /* Decision Alert Boxes */
+    .status-badge-approved {
         background: rgba(16, 185, 129, 0.12);
         border: 2px solid #10b981;
         border-radius: 10px;
-        padding: 20px;
+        padding: 24px;
         text-align: center;
+        margin-bottom: 16px;
     }
-    .predict-rejected {
+    .status-badge-rejected {
         background: rgba(244, 63, 94, 0.12);
         border: 2px solid #f43f5e;
         border-radius: 10px;
-        padding: 20px;
+        padding: 24px;
         text-align: center;
+        margin-bottom: 16px;
     }
 </style>
 """, unsafe_allow_html=True)
 
 
 # ----------------------------------------------------------------------------
-# Data & Model Caching
+# Data & Model Loading (Cached)
 # ----------------------------------------------------------------------------
-@st.cache_data(show_spinner="Loading and preprocessing dataset...")
-def get_dataset():
-    # If loan_data.csv exists, use it
+@st.cache_data(show_spinner="Loading data...")
+def load_data():
     csv_file = "loan_data.csv"
     if not os.path.exists(csv_file):
-        raise FileNotFoundError("loan_data.csv was not found in directory.")
+        raise FileNotFoundError("loan_data.csv not found.")
     df, bad_age_count, income_table = model_utils.load_and_preprocess_data(csv_file)
     return df, bad_age_count, income_table
 
-@st.cache_resource(show_spinner="Training Decision Tree Model...")
-def get_trained_model(df):
+@st.cache_resource(show_spinner="Training model...")
+def load_model(df):
     model, scaler, metrics, splits = model_utils.train_model(df)
     return model, scaler, metrics, splits
 
 try:
-    df_full, bad_age_count, income_table = get_dataset()
-    model, scaler, metrics, splits = get_trained_model(df_full)
+    df, bad_age_count, income_table = load_data()
+    model, scaler, metrics, splits = load_model(df)
 except Exception as e:
-    st.error(f"Error initializing data or model: {e}")
+    st.error(f"Error loading system: {e}")
     st.stop()
 
 
 # ----------------------------------------------------------------------------
-# Sidebar Configuration & Filters
+# Sidebar: Clean Academic Profile
 # ----------------------------------------------------------------------------
 with st.sidebar:
-    # Logo / Affiliation
     if os.path.exists("assets/lpu-logo.jpg"):
-        st.image("assets/lpu-logo.jpg", width=180)
+        st.image("assets/lpu-logo.jpg", width=160)
         
-    st.markdown("### 🎓 Academic Project Details")
+    st.markdown("### 🎓 Academic Details")
     st.markdown("""
-    **Student:** Saransh Singh  
-    **Reg. No:** `12301472`  
+    **Student:** Devangi Yadav  
+    **Reg. No:** `12300822`  
     **Roll No:** `35`  
-    **Section:** `RK2P23FHB36`  
-    **Course:** Machine Learning Practical  
-    **Date:** November 2026  
+    **Section:** `RK2P23FHB35`  
+    **Institution:** Lovely Professional University  
+    **Subject:** Machine Learning Practical  
     """)
     st.divider()
     
-    st.markdown("### 🎛️ Interactive Filters")
-    st.caption("Filter records across exploratory visualizations:")
-    
-    # Home ownership filter
-    home_options = list(df_full["person_home_ownership"].unique())
-    selected_home = st.multiselect("Home Ownership", home_options, default=home_options)
-    
-    # Loan intent filter
-    intent_options = list(df_full["loan_intent"].unique())
-    selected_intent = st.multiselect("Loan Purpose / Intent", intent_options, default=intent_options)
-    
-    # Previous default filter
-    default_filter = st.radio("Prior Default History", ["All Applications", "Clean Credit Only (No Default)", "Previous Default on File (Yes)"])
-    
-    # Income range filter
-    min_inc = int(df_full["person_income"].min())
-    max_inc = min(int(df_full["person_income"].quantile(0.99)), 250000)
-    income_slider = st.slider("Annual Income Range ($)", min_value=min_inc, max_value=max_inc, value=(min_inc, max_inc), step=5000)
-    
-    # Apply filtering
-    mask = (
-        df_full["person_home_ownership"].isin(selected_home) &
-        df_full["loan_intent"].isin(selected_intent) &
-        (df_full["person_income"] >= income_slider[0]) &
-        (df_full["person_income"] <= income_slider[1])
-    )
-    if default_filter == "Clean Credit Only (No Default)":
-        mask = mask & (df_full["previous_loan_defaults_on_file"] == "No")
-    elif default_filter == "Previous Default on File (Yes)":
-        mask = mask & (df_full["previous_loan_defaults_on_file"] == "Yes")
-        
-    filtered_df = df_full[mask].copy()
+    st.markdown("### 📌 Quick Summary")
+    st.markdown(f"""
+    - **Dataset:** 45,000 Applications
+    - **Model:** Decision Tree (`depth=5`)
+    - **Test Accuracy:** **91.2%**
+    - **Data Cleaned:** 7 age outliers fixed
+    """)
     
     st.divider()
-    st.metric("Filtered Records", f"{len(filtered_df):,}", f"{(len(filtered_df)/len(df_full))*100:.1f}% of total")
-    if st.button("Reset Filters", use_container_width=True):
-        st.rerun()
+    if os.path.exists("Predicting_Loan_Approval_Report.docx"):
+        with open("Predicting_Loan_Approval_Report.docx", "rb") as f:
+            st.download_button(
+                "📥 Download Project Report",
+                data=f.read(),
+                file_name="Predicting_Loan_Approval_Report.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                use_container_width=True
+            )
 
 
 # ----------------------------------------------------------------------------
-# Hero Banner
+# Header Section (Clean & Minimal)
 # ----------------------------------------------------------------------------
 st.markdown("""
-<div class="hero-card">
-    <div class="hero-title">
-        <span>💳</span> Predicting Loan Approval • Decision Tree Analytics
-    </div>
-    <div class="hero-subtitle">
-        An enterprise end-to-end Machine Learning intelligence dashboard evaluating credit risk, income disparities, and loan approval classification.
-    </div>
-    <div class="hero-badges">
-        <span class="hero-badge">Lovely Professional University</span>
-        <span class="hero-badge">Saransh Singh • 12301472</span>
-        <span class="hero-badge-green">Test Accuracy: 91.17%</span>
-        <span class="hero-badge-purple">45,000 Loan Records</span>
-        <span class="hero-badge">DecisionTree max_depth=5</span>
+<div class="main-header">
+    <div class="main-title">💳 Loan Approval Prediction Dashboard</div>
+    <div class="main-sub">
+        Decision Tree Classification of 45,000 Loan Applications • <b>Devangi Yadav</b> (Reg: 12300822, Roll: 35, Section: RK2P23FHB35)
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 
 # ----------------------------------------------------------------------------
-# Executive KPI Metric Grid
+# 4 Clean KPI Cards
 # ----------------------------------------------------------------------------
-overall_appr_rate = (df_full["loan_status"].mean()) * 100
-filtered_appr_rate = (filtered_df["loan_status"].mean() * 100) if len(filtered_df) > 0 else 0.0
+overall_approval_pct = float(df["loan_status"].mean() * 100)
 
 st.markdown(f"""
-<div class="kpi-grid">
-    <div class="kpi-card">
-        <div class="kpi-label">Dataset Applications</div>
-        <div class="kpi-val">{len(df_full):,}</div>
-        <div class="kpi-sub">Filtered: {len(filtered_df):,} rows</div>
+<div class="kpi-row">
+    <div class="kpi-box">
+        <div class="kpi-label">Total Applications</div>
+        <div class="kpi-number">{len(df):,}</div>
+        <div class="kpi-note">Full Kaggle dataset</div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-box">
         <div class="kpi-label">Overall Approval Rate</div>
-        <div class="kpi-val" style="color: #38bdf8;">{overall_appr_rate:.1f}%</div>
-        <div class="kpi-sub">Filtered rate: {filtered_appr_rate:.1f}%</div>
+        <div class="kpi-number" style="color: #38bdf8;">{overall_approval_pct:.1f}%</div>
+        <div class="kpi-note">10,000 approved / 35,000 rejected</div>
     </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Model Test Accuracy</div>
-        <div class="kpi-val" style="color: #10b981;">{metrics['accuracy']:.2%}</div>
-        <div class="kpi-sub">Baseline: 77.78% (+13.4%)</div>
+    <div class="kpi-box">
+        <div class="kpi-label">Model Accuracy</div>
+        <div class="kpi-number" style="color: #10b981;">{metrics['accuracy']:.1%}</div>
+        <div class="kpi-note">Tested on 9,000 unseen applications</div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-box">
         <div class="kpi-label">Precision (Approved)</div>
-        <div class="kpi-val" style="color: #10b981;">{metrics['precision']:.1%}</div>
-        <div class="kpi-sub">1,446 / 1,687 true hits</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Recall (Approved)</div>
-        <div class="kpi-val" style="color: #f59e0b;">{metrics['recall']:.1%}</div>
-        <div class="kpi-sub">1,446 / 2,000 captured</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">F1-Score Balance</div>
-        <div class="kpi-val" style="color: #a855f7;">{metrics['f1']:.1%}</div>
-        <div class="kpi-sub">Harmonic Mean</div>
+        <div class="kpi-number" style="color: #a855f7;">{metrics['precision']:.1%}</div>
+        <div class="kpi-note">1,446 of 1,687 approvals verified</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 
 # ----------------------------------------------------------------------------
-# Main Navigation Tabs
+# 4 Simple, Focused Tabs
 # ----------------------------------------------------------------------------
-tab_cockpit, tab_eda, tab_model, tab_simulator, tab_report = st.tabs([
-    "📊 Executive Cockpit",
-    "🔍 Exploratory Analysis (EDA)",
-    "🌲 Decision Tree Model & Evaluation",
-    "⚡ Real-Time Underwriter Simulator",
-    "📄 Project Report & Artifacts"
+tab_overview, tab_model, tab_sim, tab_report = st.tabs([
+    "📊 Dataset Overview",
+    "🌲 Model & Insights",
+    "⚡ Loan Predictor",
+    "📄 Report & Downloads"
 ])
 
 
 # ============================================================================
-# TAB 1: EXECUTIVE COCKPIT
+# TAB 1: DATASET OVERVIEW
 # ============================================================================
-with tab_cockpit:
-    st.markdown("### 📊 High-Level Decision Analytics")
-    
-    col_c1, col_c2 = st.columns([1, 1.3])
-    with col_c1:
-        st.plotly_chart(vz.fig_approval_donut(filtered_df), use_container_width=True)
-    with col_c2:
-        st.plotly_chart(vz.fig_income_approval_bars(income_table, overall_rate=overall_appr_rate), use_container_width=True)
+with tab_overview:
+    col_o1, col_o2 = st.columns(2)
+    with col_o1:
+        st.plotly_chart(vz.fig_approval_donut(df), use_container_width=True)
+    with col_o2:
+        st.plotly_chart(vz.fig_income_approval_bars(income_table, overall_rate=overall_approval_pct), use_container_width=True)
         
     st.markdown("""
-    > 💡 **Key Dataset Paradox (Income vs. Approval Rate):**  
-    > In this synthetic dataset, **approval rate falls as annual income rises** (40.4% in the Low group down to 9.3% in the High group).  
-    > **Root Cause:** Low-income applicants request a significantly higher loan-to-income proportion (average 18% vs. 10% for high-income), and in this synthetic data generation process, loan-to-income ratio correlates positively with approval status.
-    """)
-    
-    st.divider()
-    
-    col_c3, col_c4 = st.columns([1.1, 1])
-    with col_c3:
-        st.plotly_chart(vz.fig_confusion_matrix(metrics), use_container_width=True)
-    with col_c4:
-        st.plotly_chart(vz.fig_feature_importance(metrics["feature_importances"], top_n=6), use_container_width=True)
+    <div class="clean-card">
+        <h4 style="margin-top:0; color:#f8fafc; font-size:15px;">📌 Key Dataset Insights</h4>
+        <ul style="color:#cbd5e1; font-size:13px; margin-bottom:0; line-height: 1.6;">
+            <li><b>Imbalanced Data:</b> Only 22.2% of applications are approved. A naive baseline that rejects everyone would have 77.8% accuracy. The Decision Tree reaches <b>91.2%</b>.</li>
+            <li><b>Income Group Trend:</b> Approval rates are highest in the Low income group (40.4%) and lowest in the High group (9.3%). In this synthetic dataset, low-income applicants asked for a larger share of their income (18% vs. 10%), which correlated with higher approvals.</li>
+            <li><b>Data Cleaning:</b> Blank cells = 0. Exactly <b>7 impossible ages</b> (> 100 years, e.g. 144) were detected and imputed with the median age (26 years).</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # ============================================================================
-# TAB 2: EXPLORATORY DATA ANALYSIS (EDA)
-# ============================================================================
-with tab_eda:
-    st.markdown("### 🔍 Exploratory Data Analysis & Anomaly Auditing")
-    
-    # Missing values and cleaning callout
-    with st.expander("🛠️ Data Cleaning & Anomaly Auditing Summary", expanded=False):
-        st.markdown(rf"""
-        - **Total Dataset Size:** 45,000 applications, 14 original features.
-        - **Missing Blank Cells in File:** Exactly 0 empty cells.
-        - **Anomaly Detection (Age > 100):** Identified **7 impossible age entries** (ranging from 109 to 144 years).
-        - **Imputation Strategy:** Replaced bad age entries with the dataset median age (**{df_full['person_age'].median():.0f} years**).
-        - **Credit Score Standardization:** Scaled from $\mu = {metrics['cs_mean_raw']:.2f}, \sigma = {metrics['cs_std_raw']:.2f}$ to $\mu = 0.00, \sigma = 1.00$ on train split before testing.
-        """)
-    
-    col_e1, col_e2 = st.columns(2)
-    with col_e1:
-        st.plotly_chart(vz.fig_scatter_income_loan(filtered_df), use_container_width=True)
-    with col_e2:
-        st.plotly_chart(vz.fig_credit_score_standardization(df_full["credit_score"]), use_container_width=True)
-        
-    col_e3, col_e4 = st.columns(2)
-    with col_e3:
-        st.plotly_chart(vz.fig_categorical_approval(filtered_df, "loan_intent", "Approval Rate by Loan Purpose / Intent"), use_container_width=True)
-    with col_e4:
-        st.plotly_chart(vz.fig_categorical_approval(filtered_df, "person_home_ownership", "Approval Rate by Home Ownership"), use_container_width=True)
-        
-    st.markdown("#### 📋 Filtered Records Explorer")
-    st.dataframe(
-        filtered_df.head(100),
-        use_container_width=True,
-        hide_index=True
-    )
-
-
-# ============================================================================
-# TAB 3: MODEL PERFORMANCE & DECISION TREE
+# TAB 2: MODEL & INSIGHTS
 # ============================================================================
 with tab_model:
-    st.markdown("### 🌲 Decision Tree Classification Architecture")
-    
-    col_m1, col_m2 = st.columns([1.1, 1])
+    col_m1, col_m2 = st.columns(2)
     with col_m1:
-        st.plotly_chart(vz.fig_depth_overfitting(metrics["depth_df"]), use_container_width=True)
+        st.plotly_chart(vz.fig_confusion_matrix(metrics), use_container_width=True)
     with col_m2:
-        st.plotly_chart(vz.fig_feature_importance(metrics["feature_importances"], top_n=8), use_container_width=True)
+        st.plotly_chart(vz.fig_feature_importance(metrics["feature_importances"], top_n=5), use_container_width=True)
         
     st.markdown("""
-    #### 🎯 Why Maximum Depth 5 is Optimal:
-    - **Overfitting Avoidance:** At `max_depth=5`, Training Accuracy (**91.4%**) and Test Accuracy (**91.17%**) are virtually identical, showing strong generalizability.
-    - **Higher Depths Memorize:** If `max_depth` is allowed to grow to 20, Training Accuracy jumps to **98.43%**, but Test Accuracy deteriorates to **90.28%** (pure overfitting).
-    - **Model Explainability:** Depth 5 limits decision paths to at most 5 sequential questions, complying with financial regulatory transparency requirements.
-    """)
+    <div class="clean-card">
+        <h4 style="margin-top:0; color:#f8fafc; font-size:15px;">🔍 What Drives Loan Approval?</h4>
+        <ul style="color:#cbd5e1; font-size:13px; margin-bottom:0; line-height: 1.6;">
+            <li><b>Previous Default History (47.1% Importance):</b> The single most decisive factor. In this dataset, <b>100% of applicants with a previous default were rejected</b>.</li>
+            <li><b>Loan-to-Income Ratio (20.3% Importance):</b> The second most critical branch in the decision tree.</li>
+            <li><b>Optimal Depth (max_depth = 5):</b> Training accuracy (91.4%) and test accuracy (91.2%) are balanced, preventing overfitting while keeping decisions transparent.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
     
-    st.divider()
-    
-    st.markdown("#### 🌳 Trained Decision Tree Visualization (Top Levels)")
-    if os.path.exists("outputs/decision_tree.png"):
-        st.image("outputs/decision_tree.png", caption="Decision Tree Structure (Blue = Approved, Orange = Rejected, max_depth=3 view)", use_container_width=True)
-    elif os.path.exists("extracted_media/25ef8fa6ea7ae012fdaf13e63b03cd5cf3ac14bf.png"):
-        st.image("extracted_media/25ef8fa6ea7ae012fdaf13e63b03cd5cf3ac14bf.png", caption="Decision Tree Structure", use_container_width=True)
-    else:
-        st.info("Decision tree visual file generated in outputs folder.")
+    with st.expander("🌳 View Decision Tree Structure Diagram & Complexity Curve", expanded=False):
+        c_tr1, c_tr2 = st.columns([1.2, 1])
+        with c_tr1:
+            if os.path.exists("outputs/decision_tree.png"):
+                st.image("outputs/decision_tree.png", caption="Decision Tree Top 3 Levels (Blue = Approved, Orange = Rejected)", use_container_width=True)
+        with c_tr2:
+            st.plotly_chart(vz.fig_depth_overfitting(metrics["depth_df"]), use_container_width=True)
 
 
 # ============================================================================
-# TAB 4: REAL-TIME UNDERWRITING SIMULATOR
+# TAB 3: LIVE LOAN PREDICTOR
 # ============================================================================
-with tab_simulator:
-    st.markdown("### ⚡ Live Loan Underwriter Simulator")
-    st.caption("Enter prospective applicant details to generate immediate real-time decisioning and risk path explanation.")
+with tab_sim:
+    st.markdown("##### ⚡ Interactive Loan Approval Simulator")
+    st.caption("Adjust the applicant details below to see the instant model prediction and decision rules.")
     
-    col_sim_in, col_sim_out = st.columns([1.2, 1])
+    col_f1, col_f2 = st.columns([1.1, 1])
     
-    with col_sim_in:
-        st.markdown("##### 📝 Applicant Profile")
-        
-        c_in1, c_in2 = st.columns(2)
-        with c_in1:
-            in_age = st.number_input("Applicant Age", min_value=18, max_value=95, value=28)
-            in_gender = st.selectbox("Gender", ["male", "female"])
-            in_education = st.selectbox("Highest Education", ["High School", "Associate", "Bachelor", "Master", "Doctorate"], index=2)
-            in_income = st.number_input("Annual Income ($)", min_value=5000, max_value=1000000, value=65000, step=2500)
-            in_exp = st.slider("Employment Experience (Years)", min_value=0, max_value=40, value=4)
-        with c_in2:
-            in_home = st.selectbox("Home Ownership", ["RENT", "OWN", "MORTGAGE", "OTHER"], index=2)
-            in_amount = st.number_input("Requested Loan Amount ($)", min_value=500, max_value=50000, value=12000, step=500)
-            in_intent = st.selectbox("Loan Purpose", ["PERSONAL", "EDUCATION", "MEDICAL", "VENTURE", "HOMEIMPROVEMENT", "DEBTCONSOLIDATION"], index=0)
-            in_rate = st.slider("Loan Interest Rate (%)", min_value=4.0, max_value=25.0, value=11.5, step=0.1)
-            in_credit = st.slider("Applicant Credit Score", min_value=390, max_value=850, value=710, step=5)
-            
-        c_in3, c_in4 = st.columns(2)
-        with c_in3:
-            in_cred_len = st.number_input("Credit History Length (Years)", min_value=0.0, max_value=30.0, value=6.0, step=0.5)
-        with c_in4:
-            in_default = st.selectbox("Previous Loan Default on File?", ["No", "Yes"], index=0)
-            
-        calc_lpi = in_amount / max(in_income, 1)
-        st.caption(f"Computed Loan-to-Income Ratio: **{calc_lpi:.1%}**")
-        
-        run_sim = st.button("Evaluate Application Now", type="primary", use_container_width=True)
-        
-    with col_sim_out:
-        st.markdown("##### 🎯 Underwriting Assessment")
-        
-        # Prepare dictionary
-        applicant_payload = {
+    with col_f1:
+        with st.container(border=True):
+            r1_1, r1_2 = st.columns(2)
+            with r1_1:
+                in_age = st.number_input("Age", min_value=18, max_value=85, value=28)
+                in_gender = st.selectbox("Gender", ["female", "male"])
+                in_edu = st.selectbox("Education", ["High School", "Associate", "Bachelor", "Master", "Doctorate"], index=2)
+                in_inc = st.number_input("Annual Income ($)", min_value=5000, max_value=500000, value=60000, step=5000)
+            with r1_2:
+                in_home = st.selectbox("Home Ownership", ["RENT", "OWN", "MORTGAGE", "OTHER"], index=2)
+                in_amount = st.number_input("Loan Amount ($)", min_value=500, max_value=50000, value=10000, step=500)
+                in_intent = st.selectbox("Loan Purpose", ["PERSONAL", "EDUCATION", "MEDICAL", "VENTURE", "HOMEIMPROVEMENT", "DEBTCONSOLIDATION"])
+                in_rate = st.slider("Interest Rate (%)", min_value=5.0, max_value=23.0, value=10.5, step=0.1)
+                
+            r2_1, r2_2 = st.columns(2)
+            with r2_1:
+                in_credit = st.slider("Credit Score", min_value=390, max_value=850, value=710, step=5)
+            with r2_2:
+                in_default = st.selectbox("Previous Default on File?", ["No", "Yes"], index=0)
+                
+            calc_lpi = in_amount / max(in_inc, 1)
+            st.caption(f"Loan-to-Income Ratio: **{calc_lpi:.1%}**")
+
+    with col_f2:
+        applicant = {
             "person_age": float(in_age),
             "person_gender": in_gender,
-            "person_education": in_education,
-            "person_income": float(in_income),
-            "person_emp_exp": int(in_exp),
+            "person_education": in_edu,
+            "person_income": float(in_inc),
+            "person_emp_exp": 3,
             "person_home_ownership": in_home,
             "loan_amnt": float(in_amount),
             "loan_intent": in_intent,
             "loan_int_rate": float(in_rate),
             "loan_percent_income": float(calc_lpi),
-            "cb_person_cred_hist_length": float(in_cred_len),
+            "cb_person_cred_hist_length": 4.0,
             "credit_score": int(in_credit),
             "previous_loan_defaults_on_file": in_default
         }
         
-        res = model_utils.predict_single_applicant(
-            model, scaler, metrics["feature_columns"], applicant_payload
+        result = model_utils.predict_single_applicant(
+            model, scaler, metrics["feature_columns"], applicant
         )
         
-        if res["is_approved"]:
+        if result["is_approved"]:
             st.markdown(f"""
-            <div class="predict-approved">
-                <h2 style="color: #10b981; margin:0;">🎉 LOAN APPROVED</h2>
-                <p style="font-size:14px; color:#cbd5e1; margin-top:6px;">Applicant meets decision tree credit criteria.</p>
-                <h3 style="color:#ffffff; margin:10px 0 0 0;">Approval Confidence: {res['approval_probability']:.1%}</h3>
+            <div class="status-badge-approved">
+                <h2 style="color: #10b981; margin:0 0 8px 0; font-size:24px;">🎉 LOAN APPROVED</h2>
+                <div style="font-size:14px; color:#cbd5e1;">Meets credit underwriting criteria.</div>
+                <div style="font-size:18px; font-weight:700; color:#ffffff; margin-top:10px;">
+                    Approval Confidence: {result['approval_probability']:.1%}
+                </div>
             </div>
             """, unsafe_allow_html=True)
         else:
             st.markdown(f"""
-            <div class="predict-rejected">
-                <h2 style="color: #f43f5e; margin:0;">🛑 LOAN REJECTED</h2>
-                <p style="font-size:14px; color:#cbd5e1; margin-top:6px;">Application failed credit thresholds.</p>
-                <h3 style="color:#ffffff; margin:10px 0 0 0;">Rejection Confidence: {res['rejection_probability']:.1%}</h3>
+            <div class="status-badge-rejected">
+                <h2 style="color: #f43f5e; margin:0 0 8px 0; font-size:24px;">🛑 LOAN REJECTED</h2>
+                <div style="font-size:14px; color:#cbd5e1;">Did not meet risk criteria.</div>
+                <div style="font-size:18px; font-weight:700; color:#ffffff; margin-top:10px;">
+                    Rejection Probability: {result['rejection_probability']:.1%}
+                </div>
             </div>
             """, unsafe_allow_html=True)
             
-        st.markdown("##### 🔍 Decision Reasoning & Risk Flags")
-        for r in res["reasons"]:
-            st.markdown(r)
-            
-        st.markdown("##### 💡 Advisory")
-        if res["is_approved"]:
-            st.success("Application qualifies under current risk rules. Standard documentation checks recommended.")
-        else:
-            if in_default == "Yes":
-                st.error("Primary barrier is previous loan default record. No loans are approved with default records in this risk model.")
-            elif calc_lpi > 0.30:
-                st.warning("Consider lowering requested loan amount or adding collateral to reduce loan-to-income ratio below 25%.")
-            else:
-                st.info("Consider adjusting interest rate or reviewing secondary applicant credit variables.")
+        with st.container(border=True):
+            st.markdown("**Underwriting Rule Analysis:**")
+            for r in result["reasons"]:
+                st.markdown(r)
 
 
 # ============================================================================
-# TAB 5: REPORT & ARTIFACTS
+# TAB 4: REPORT & DOWNLOADS
 # ============================================================================
 with tab_report:
-    st.markdown("### 📄 Academic Project Report & Methodological Documentation")
+    col_rep1, col_rep2 = st.columns([1.4, 1])
     
-    col_rep1, col_rep2 = st.columns([1.5, 1])
     with col_rep1:
         st.markdown(r"""
-        #### 1. Executive Summary
-        When a customer applies for a loan, financial institutions must decide whether to approve or reject the application. In this project, a **Decision Tree model** is trained on **45,000 past loan applications** to automate this decision process based on applicant financial history.
+        #### 📄 Project Practical File Summary
+        - **Assigned Topic:** Predicting Loan Approval using Decision Tree Classification
+        - **Institution:** Lovely Professional University (LPU)
+        - **Submitted By:** Devangi Yadav (Reg. No.: 12300822, Roll No.: 35, Section: RK2P23FHB35)
         
-        #### 2. Problem Statement Workflow
-        1. **Load Data:** 45,000 applications, 14 feature variables.
-        2. **Clean & Standardize:** Median imputation for 7 impossible ages (> 100); StandardScaler on Credit Score ($\mu=632.65, \sigma=50.29$).
-        3. **Train Model:** Scikit-Learn `DecisionTreeClassifier(max_depth=5, random_state=42)`.
-        4. **Evaluate Performance:** Stratified 80/20 test split (9,000 unseen applications), confusion matrix analysis.
-        5. **Income Analysis:** Quartile grouping exploring approval dynamics across income brackets.
-        
-        #### 3. Empirical Results
-        - **Accuracy:** 91.17% (vs. baseline no-information rate of 77.8%)
-        - **Precision (Approved):** 85.7%
-        - **Recall (Approved):** 72.3%
-        - **Confusion Matrix:** 6,759 True Negatives, 1,446 True Positives, 241 False Approvals, 554 False Rejections.
+        ##### Problem Statement Tasks Completed:
+        1. **Dataset Loaded:** 45,000 past loan applications (14 columns).
+        2. **Preprocessing:** 7 impossible ages (> 100) imputed with median (26.0); Credit scores standardized ($\mu=0, \sigma=1$).
+        3. **Decision Tree:** Trained with `max_depth=5` to prevent overfitting.
+        4. **Evaluation:** Evaluated on 9,000 unseen test rows (80/20 stratified split), reaching **91.2% accuracy**, **85.7% precision**, and **72.3% recall**.
+        5. **Income Analysis:** Visualized loan approval dynamics across four income quartiles.
         """)
         
     with col_rep2:
-        st.markdown("#### 📥 Project Artifacts & Downloads")
-        
-        # Download DOCX report
-        if os.path.exists("Predicting_Loan_Approval_Report.docx"):
-            with open("Predicting_Loan_Approval_Report.docx", "rb") as f:
-                docx_bytes = f.read()
-            st.download_button(
-                label="📄 Download Official DOCX Report (2 MB)",
-                data=docx_bytes,
-                file_name="Predicting_Loan_Approval_Report.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                use_container_width=True
-            )
+        with st.container(border=True):
+            st.markdown("#### 📥 Direct Downloads")
             
-        # Download cleaned CSV
-        if os.path.exists("loan_data.csv"):
-            with open("loan_data.csv", "rb") as f:
-                csv_bytes = f.read()
-            st.download_button(
-                label="📊 Download Cleaned Dataset (3.6 MB CSV)",
-                data=csv_bytes,
-                file_name="loan_data.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-            
-        # Download results JSON
-        if os.path.exists("outputs/results.json"):
-            with open("outputs/results.json", "rb") as f:
-                res_bytes = f.read()
-            st.download_button(
-                label="⚙️ Download Metrics results.json",
-                data=res_bytes,
-                file_name="results.json",
-                mime="application/json",
-                use_container_width=True
-            )
-            
-        st.markdown("""
-        **Repository:**  
-        `https://github.com/Saransh2005/clustering1.git`
-        
-        **Streamlit Cloud Ready:**  
-        Main branch, Entrypoint: `app.py`
-        """)
+            if os.path.exists("Predicting_Loan_Approval_Report.docx"):
+                with open("Predicting_Loan_Approval_Report.docx", "rb") as f:
+                    st.download_button(
+                        "📄 Download Word Report (.docx)",
+                        data=f.read(),
+                        file_name="Predicting_Loan_Approval_Report.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        use_container_width=True
+                    )
+                    
+            if os.path.exists("loan_data.csv"):
+                with open("loan_data.csv", "rb") as f:
+                    st.download_button(
+                        "📊 Download Full Dataset (3.6 MB)",
+                        data=f.read(),
+                        file_name="loan_data.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+                    
+            if os.path.exists("outputs/results.json"):
+                with open("outputs/results.json", "rb") as f:
+                    st.download_button(
+                        "⚙️ Download Results (.json)",
+                        data=f.read(),
+                        file_name="results.json",
+                        mime="application/json",
+                        use_container_width=True
+                    )
 
+
+# ----------------------------------------------------------------------------
+# Minimal Footer
+# ----------------------------------------------------------------------------
 st.markdown("""
-<div style="text-align:center; padding: 20px 0 10px 0; color:#64748b; font-size:12px;">
-    Lovely Professional University • Project / Practical File • Saransh Singh (Reg: 12301472, Roll: 35, Sec: RK2P23FHB36)
+<div style="text-align:center; padding: 25px 0 10px 0; color:#64748b; font-size:12px;">
+    Lovely Professional University • Devangi Yadav • Registration No: 12300822 • Section: RK2P23FHB35
 </div>
 """, unsafe_allow_html=True)

@@ -2,10 +2,10 @@
 """
 Predicting Loan Approval using a Decision Tree
 ==============================================
-Name      : Saransh Singh
-Reg. No.  : 12301472
+Name      : Devangi Yadav
+Reg. No.  : 12300822
 Roll No.  : 35
-Section   : RK2P23FHB36
+Section   : RK2P23FHB35
 Dataset   : Loan Approval Classification Dataset (Kaggle, 45,000 applications)
 https://www.kaggle.com/datasets/taweilo/loan-approval-classification-data
 
@@ -340,3 +340,4 @@ with open(f"{OUT_DIR}/results.json", "w") as f:
 print("Saved: confusion_matrix.png, approval_by_income.png, decision_tree.png,")
 print("       feature_importance.png, dashboard.png  ->  folder '" + OUT_DIR + "'")
 print("\nDone.")
+

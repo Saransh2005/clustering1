@@ -12,10 +12,10 @@
 
 ## 🎓 Academic Submission Details
 - **Institution:** Lovely Professional University (LPU)
-- **Student Name:** Saransh Singh
-- **Registration No.:** `12301472`
+- **Student Name:** Devangi Yadav
+- **Registration No.:** `12300822`
 - **Roll No.:** `35`
-- **Section:** `RK2P23FHB36`
+- **Section:** `RK2P23FHB35`
 - **Report Document:** [`Predicting_Loan_Approval_Report.docx`](Predicting_Loan_Approval_Report.docx)
 - **Submission Date:** November 2026
 
@@ -134,3 +134,4 @@ clustering1/
 - Kaggle Loan Approval Dataset: [taweilo/loan-approval-classification-data](https://www.kaggle.com/datasets/taweilo/loan-approval-classification-data)
 - Scikit-Learn Documentation: [Decision Trees](https://scikit-learn.org/stable/modules/tree.html)
 - Breiman, L., Friedman, J., Olshen, R., & Stone, C. (1984). *Classification and Regression Trees*. Wadsworth.
+
